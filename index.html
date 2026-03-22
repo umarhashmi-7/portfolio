@@ -51,7 +51,7 @@ section{position:relative;z-index:1;}
 .slabel{font-family:'Share Tech Mono',monospace;font-size:.64rem;letter-spacing:.28em;color:var(--cyan);opacity:.7;margin-bottom:10px;text-transform:uppercase;}
 .stitle{font-family:'Syne',sans-serif;font-weight:800;font-size:clamp(2rem,4.5vw,3.4rem);line-height:1.05;letter-spacing:-.02em;margin-bottom:12px;}
 .ssub{font-size:.9rem;color:var(--muted);line-height:1.75;max-width:520px;}
-.rv{opacity:0;transform:translateY(36px);transition:opacity .7s ease,transform .7s ease;}
+.rv{opacity:1;transform:translateY(0);transition:opacity .7s ease,transform .7s ease;}
 .rv.in{opacity:1;transform:translateY(0);}
 .d1{transition-delay:.08s;}.d2{transition-delay:.16s;}.d3{transition-delay:.24s;}.d4{transition-delay:.32s;}
 
@@ -546,8 +546,14 @@ let ti=0;
 function addTL(){if(ti>=tLines.length)return;const d=document.createElement('div');d.className='tl';d.innerHTML=tLines[ti];tb.appendChild(d);ti++;if(ti<tLines.length)setTimeout(addTL,380);}
 setTimeout(addTL,600);
 
-// REVEALS
-const rvObs=new IntersectionObserver(e=>e.forEach(en=>{if(en.isIntersecting)en.target.classList.add('in');}),{threshold:0.1});
+// REVEALS — content always visible, animate as enhancement
+document.querySelectorAll('.rv').forEach(el=>{
+  el.style.opacity='0';
+  el.style.transform='translateY(36px)';
+});
+const rvObs=new IntersectionObserver(e=>e.forEach(en=>{
+  if(en.isIntersecting){en.target.style.opacity='1';en.target.style.transform='translateY(0)';}
+}),{threshold:0.08,rootMargin:'0px 0px -40px 0px'});
 document.querySelectorAll('.rv').forEach(el=>rvObs.observe(el));
 
 // COUNTERS
