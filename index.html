@@ -261,7 +261,13 @@ section {
 #loader {
   position:fixed; inset:0; background:var(--bg); z-index:99000;
   display:flex; flex-direction:column; align-items:center; justify-content:center; gap:28px;
-  transition: opacity 0.7s, transform 0.7s;
+  animation: loader-auto-hide 0.6s ease forwards 2.8s;
+  pointer-events:auto;
+}
+#loader.done { display:none; }
+@keyframes loader-auto-hide {
+  0%   { opacity:1; pointer-events:auto; }
+  100% { opacity:0; pointer-events:none; visibility:hidden; }
 }
 #loader canvas { position:absolute; inset:0; }
 #loader-phrase {
@@ -1427,38 +1433,38 @@ window.dlResume = function(e) {
 };
 
 /* ══════════════════════════════════
-   LOADER — SIMPLE & RELIABLE
+   LOADER — CSS HANDLES DISMISS
 ══════════════════════════════════ */
+// CSS animation auto-hides loader at 2.8s
+// JS just fills the bar visually
 (function(){
-  var lo = document.getElementById('loader');
-  var fill = document.getElementById('loader-fill');
-  var phrase = document.getElementById('loader-phrase');
-  
-  // Animate bar quickly
-  var pct = 0;
-  var barTimer = setInterval(function(){
-    pct += 4;
-    if(fill) fill.style.width = Math.min(pct, 100) + '%';
-    if(pct >= 100) clearInterval(barTimer);
-  }, 40);
-
-  // Simple phrases
-  var msgs = ['BUILDING...', 'UMAR.', 'LIVE.'];
-  var mi = 0;
-  if(phrase) phrase.textContent = msgs[mi];
-  var msgTimer = setInterval(function(){
-    mi++;
-    if(mi < msgs.length){ if(phrase) phrase.textContent = msgs[mi]; }
-    else { clearInterval(msgTimer); }
-  }, 600);
-
-  // KILL LOADER at exactly 2.2 seconds — no matter what
-  setTimeout(function(){
-    if(!lo) return;
-    lo.style.transition = 'opacity 0.5s';
-    lo.style.opacity = '0';
-    setTimeout(function(){ lo.style.display = 'none'; }, 520);
-  }, 2200);
+  try {
+    var fill = document.getElementById('loader-fill');
+    var phrase = document.getElementById('loader-phrase');
+    var lo = document.getElementById('loader');
+    
+    // Fill bar over 2.5s
+    var pct = 0;
+    var t = setInterval(function(){
+      pct += 2;
+      if(fill) fill.style.width = Math.min(pct,100)+'%';
+      if(pct>=100) clearInterval(t);
+    }, 50);
+    
+    // Phrases
+    var p = ['BUILDING...','UMAR.','LIVE.'];
+    var i = 0;
+    if(phrase) phrase.textContent = p[i];
+    setInterval(function(){ i=(i+1)%p.length; if(phrase) phrase.textContent=p[i]; }, 700);
+    
+    // After CSS animation ends, set display none
+    if(lo) lo.addEventListener('animationend', function(){ lo.style.display='none'; });
+    
+    // Hard backup: 4s
+    setTimeout(function(){
+      if(lo){ lo.style.display='none'; lo.style.opacity='0'; }
+    }, 4000);
+  } catch(e) {}
 })();
 
 /* ══════════════════════════════════
