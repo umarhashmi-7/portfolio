@@ -1427,53 +1427,39 @@ window.dlResume = function(e) {
 };
 
 /* ══════════════════════════════════
-   LOADER — BULLETPROOF
+   LOADER — SIMPLE & RELIABLE
 ══════════════════════════════════ */
-var _loaderDone = false;
-function killLoader(){
-  if(_loaderDone) return;
-  _loaderDone = true;
+(function(){
   var lo = document.getElementById('loader');
-  if(!lo) return;
-  lo.style.transition = 'opacity 0.6s';
-  lo.style.opacity = '0';
-  setTimeout(function(){ lo.style.display = 'none'; }, 650);
-}
-// Particle canvas
-try {
-  var lc = document.getElementById('ldr-canvas');
-  lc.width = window.innerWidth; lc.height = window.innerHeight;
-  var lx = lc.getContext('2d');
-  var lp = [];
-  for(var _i=0;_i<50;_i++) lp.push({x:Math.random()*lc.width,y:Math.random()*lc.height,vx:(Math.random()-.5)*.6,vy:(Math.random()-.5)*.6,r:Math.random()*1.5+.5});
-  var lRun = true;
-  (function lAnim(){ if(!lRun)return; lx.clearRect(0,0,lc.width,lc.height);
-    lp.forEach(function(p){ p.x+=p.vx; p.y+=p.vy;
-      if(p.x<0||p.x>lc.width)p.vx*=-1; if(p.y<0||p.y>lc.height)p.vy*=-1;
-      lx.beginPath();lx.arc(p.x,p.y,p.r,0,Math.PI*2);lx.fillStyle='rgba(79,195,247,0.5)';lx.fill(); });
-    requestAnimationFrame(lAnim); })();
-} catch(e){}
-// Typewriter
-var _phrases = ['BUILDING...','UMAR.','LIVE.'];
-var _pi=0, _ci=0;
-var _pel = document.getElementById('loader-phrase');
-var _fel = document.getElementById('loader-fill');
-function _lType(){
-  try {
-    var word = _phrases[_pi];
-    _pel.textContent = word.slice(0,_ci) + '_';
-    _fel.style.width = Math.min(95, Math.round(((_pi*30)+_ci)/90*95)) + '%';
-    _ci++;
-    if(_ci > word.length){
-      _ci=0; _pi++;
-      if(_pi >= _phrases.length){ _fel.style.width='100%'; setTimeout(killLoader,300); return; }
-      setTimeout(function(){ _pel.textContent=''; setTimeout(_lType,150); }, 450);
-    } else { setTimeout(_lType, 55); }
-  } catch(e){ killLoader(); }
-}
-setTimeout(_lType, 200);
-// ABSOLUTE FAILSAFE
-setTimeout(killLoader, 3500);
+  var fill = document.getElementById('loader-fill');
+  var phrase = document.getElementById('loader-phrase');
+  
+  // Animate bar quickly
+  var pct = 0;
+  var barTimer = setInterval(function(){
+    pct += 4;
+    if(fill) fill.style.width = Math.min(pct, 100) + '%';
+    if(pct >= 100) clearInterval(barTimer);
+  }, 40);
+
+  // Simple phrases
+  var msgs = ['BUILDING...', 'UMAR.', 'LIVE.'];
+  var mi = 0;
+  if(phrase) phrase.textContent = msgs[mi];
+  var msgTimer = setInterval(function(){
+    mi++;
+    if(mi < msgs.length){ if(phrase) phrase.textContent = msgs[mi]; }
+    else { clearInterval(msgTimer); }
+  }, 600);
+
+  // KILL LOADER at exactly 2.2 seconds — no matter what
+  setTimeout(function(){
+    if(!lo) return;
+    lo.style.transition = 'opacity 0.5s';
+    lo.style.opacity = '0';
+    setTimeout(function(){ lo.style.display = 'none'; }, 520);
+  }, 2200);
+})();
 
 /* ══════════════════════════════════
    THREE.JS BACKGROUND
