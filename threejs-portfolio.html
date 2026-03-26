@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mohd Umar Hashmi — 3D Creative Portfolio</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Inter:wght@300;400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #0a0600;
+            --text-main: #F2E4CC;
+            --accent: #E8923A;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(232, 146, 58, 0.15);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            overscroll-behavior: none;
+        }
+
+        /* 3D Canvas Fixed in Background */
+        #webgl-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Loading Screen */
+        #loader {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-color);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 1s ease-out;
+        }
+        .loading-text {
+            font-family: 'Share Tech Mono', monospace;
+            color: var(--accent);
+            font-size: 1.5rem;
+            letter-spacing: 0.2em;
+            margin-bottom: 20px;
+        }
+        .progress-bar {
+            width: 200px;
+            height: 2px;
+            background: rgba(255,255,255,0.1);
+            position: relative;
+        }
+        #progress-fill {
+            position: absolute;
+            left: 0; top: 0; height: 100%;
+            background: var(--accent);
+            width: 0%;
+            transition: width 0.2s ease;
+        }
+
+        /* Scrollable Content */
+        #scroll-container {
+            position: relative;
+            z-index: 1;
+        }
+
+        section {
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 0 10vw;
+        }
+
+        /* Glassmorphism Panels */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 500px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            transform: translateY(50px);
+            opacity: 0;
+            transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.6s ease;
+        }
+        
+        .glass-panel.visible {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        h1, h2 { font-family: 'Syne', sans-serif; }
+        h1 { font-size: 4rem; margin-bottom: 1rem; }
+        p { font-size: 1.1rem; line-height: 1.6; color: rgba(242, 228, 204, 0.7); }
+
+        /* Magnetic Button */
+        .magnetic-btn {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 15px 30px;
+            background: transparent;
+            color: var(--accent);
+            border: 1px solid var(--accent);
+            border-radius: 30px;
+            font-family: 'Share Tech Mono', monospace;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+            transition: color 0.3s;
+        }
+        .magnetic-btn::before {
+            content: '';
+            position: absolute;
+            top: 100%; left: 0; width: 100%; height: 100%;
+            background: var(--accent);
+            transition: top 0.3s cubic-bezier(0.7, 0, 0.2, 1);
+            z-index: -1;
+        }
+        .magnetic-btn:hover { color: var(--bg-color); }
+        .magnetic-btn:hover::before { top: 0; }
+        
+        /* Alignment utilities */
+        .align-right { justify-content: flex-end; }
+        .align-left { justify-content: flex-start; }
+    </style>
+
+    <!-- Import Maps for Three.js -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+</head>
+<body>
+
+    <!-- Loading Manager UI -->
+    <div id="loader">
+        <div class="loading-text">INITIALIZING 3D ENGINE...</div>
+        <div class="progress-bar"><div id="progress-fill"></div></div>
+    </div>
+
+    <!-- WebGL Canvas -->
+    <canvas id="webgl-canvas"></canvas>
+
+    <!-- Content Overlays -->
+    <div id="scroll-container">
+        <section class="align-left">
+            <div class="glass-panel" data-scroll>
+                <h1>Mohd Umar Hashmi</h1>
+                <p>Android Developer & AI Integrator. Building next-gen applications with Groq LLaMA and beautiful interfaces.</p>
+                <a href="#projects" class="magnetic-btn">Explore Work</a>
+            </div>
+        </section>
+
+        <section class="align-right">
+            <div class="glass-panel" data-scroll>
+                <h2>SIUFIT AI</h2>
+                <p>An intelligent nutrition tracker powered by real-time AI modeling. Integrated with CameraX, ML Kit, and an advanced achievement system.</p>
+                <a href="#" class="magnetic-btn">View Details</a>
+            </div>
+        </section>
+
+        <section class="align-left">
+            <div class="glass-panel" data-scroll>
+                <h2>Eduvate Robotics</h2>
+                <p>Crafting advanced STEM curriculum. Merging code, hardware, and design into educational masterpieces.</p>
+                <a href="#" class="magnetic-btn">Read More</a>
+            </div>
+        </section>
+    </div>
+
+    <!-- External Libraries -->
+    <script src="https://cdn.jsdelivr.net/gh/studio-freight/lenis@1.0.29/bundled/lenis.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.4/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.4/ScrollTrigger.min.js"></script>
+
+    <!-- Main Application -->
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+        import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+
+        // 1. Lenis Smooth Scroll Setup
+        const lenis = new Lenis({ duration: 1.2, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)) });
+        function raf(time) {
+            lenis.raf(time);
+            requestAnimationFrame(raf);
+        }
+        requestAnimationFrame(raf);
+
+        // 2. Three.js Scene Setup
+        const canvas = document.querySelector('#webgl-canvas');
+        const scene = new THREE.Scene();
+        
+        // High-performance renderer settings
+        const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: false, powerPreference: "high-performance" });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // Cap pixel ratio for performance
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.z = 5;
+
+        // 3. Dynamic Lighting (Follows Cursor)
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+        scene.add(ambientLight);
+
+        const cursorLight = new THREE.PointLight(0xE8923A, 5, 20); // Accent color
+        scene.add(cursorLight);
+
+        // 4. Loading Manager & GLTF Model
+        const manager = new THREE.LoadingManager();
+        const progressFill = document.getElementById('progress-fill');
+        const loaderScreen = document.getElementById('loader');
+
+        manager.onProgress = (url, itemsLoaded, itemsTotal) => {
+            progressFill.style.width = `${(itemsLoaded / itemsTotal) * 100}%`;
+        };
+
+        manager.onLoad = () => {
+            loaderScreen.style.opacity = '0';
+            setTimeout(() => loaderScreen.style.display = 'none', 1000);
+            initScrollAnimations();
+        };
+
+        // Custom 3D Model Setup
+        let mainModel;
+        const gltfLoader = new GLTFLoader(manager);
+        
+        // Using a placeholder TorusKnot to demonstrate the BufferGeometry high-performance setup
+        const geometry = new THREE.TorusKnotGeometry(1, 0.3, 128, 32);
+        const material = new THREE.MeshStandardMaterial({ 
+            color: 0x222222, 
+            roughness: 0.2, 
+            metalness: 0.8,
+            wireframe: true // Cyber aesthetic
+        });
+        mainModel = new THREE.Mesh(geometry, material);
+        scene.add(mainModel);
+
+        // 5. Post-Processing (Bloom + Chromatic Aberration)
+        const composer = new EffectComposer(renderer);
+        composer.addPass(new RenderPass(scene, camera));
+
+        // Bloom
+        const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.5, 0.4, 0.85);
+        bloomPass.threshold = 0.2;
+        bloomPass.strength = 0.8;
+        bloomPass.radius = 0.5;
+        composer.addPass(bloomPass);
+
+        // Custom Chromatic Aberration Shader
+        const chromaticAberrationShader = {
+            uniforms: {
+                tDiffuse: { value: null },
+                amount: { value: 0.003 }
+            },
+            vertexShader: `
+                varying vec2 vUv;
+                void main() {
+                    vUv = uv;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+            `,
+            fragmentShader: `
+                uniform sampler2D tDiffuse;
+                uniform float amount;
+                varying vec2 vUv;
+                void main() {
+                    vec4 cr = texture2D(tDiffuse, vUv + vec2(amount, 0.0));
+                    vec4 cga = texture2D(tDiffuse, vUv);
+                    vec4 cb = texture2D(tDiffuse, vUv - vec2(amount, 0.0));
+                    gl_FragColor = vec4(cr.r, cga.g, cb.b, cga.a);
+                }
+            `
+        };
+        const caPass = new ShaderPass(chromaticAberrationShader);
+        composer.addPass(caPass);
+
+        // 6. Mouse Interaction & Parallax
+        let mouseX = 0;
+        let mouseY = 0;
+        let targetX = 0;
+        let targetY = 0;
+        const windowHalfX = window.innerWidth / 2;
+        const windowHalfY = window.innerHeight / 2;
+
+        document.addEventListener('mousemove', (event) => {
+            mouseX = (event.clientX - windowHalfX);
+            mouseY = (event.clientY - windowHalfY);
+            
+            // Map cursor light position
+            const vector = new THREE.Vector3(
+                (event.clientX / window.innerWidth) * 2 - 1,
+                -(event.clientY / window.innerHeight) * 2 + 1,
+                0.5
+            );
+            vector.unproject(camera);
+            const dir = vector.sub(camera.position).normalize();
+            const distance = -camera.position.z / dir.z;
+            const pos = camera.position.clone().add(dir.multiplyScalar(distance));
+            cursorLight.position.copy(pos);
+        });
+
+        // Magnetic Button Logic
+        const magneticBtns = document.querySelectorAll('.magnetic-btn');
+        magneticBtns.forEach(btn => {
+            btn.addEventListener('mousemove', (e) => {
+                const rect = btn.getBoundingClientRect();
+                const x = e.clientX - rect.left - rect.width / 2;
+                const y = e.clientY - rect.top - rect.height / 2;
+                gsap.to(btn, { x: x * 0.3, y: y * 0.3, duration: 0.5, ease: "power2.out" });
+            });
+            btn.addEventListener('mouseleave', () => {
+                gsap.to(btn, { x: 0, y: 0, duration: 0.5, ease: "elastic.out(1, 0.3)" });
+            });
+        });
+
+        // 7. Scroll Animations (GSAP + Three.js)
+        gsap.registerPlugin(ScrollTrigger);
+
+        function initScrollAnimations() {
+            // Animate Model on Scroll
+            gsap.to(mainModel.rotation, {
+                x: Math.PI * 2,
+                y: Math.PI * 2,
+                scrollTrigger: {
+                    trigger: "#scroll-container",
+                    start: "top top",
+                    end: "bottom bottom",
+                    scrub: 1 // Buttery smooth scrubbing
+                }
+            });
+
+            // Move model side to side based on section
+            const sections = document.querySelectorAll('section');
+            sections.forEach((sec, i) => {
+                const isEven = i % 2 === 0;
+                gsap.to(mainModel.position, {
+                    x: isEven ? 1.5 : -1.5,
+                    scrollTrigger: {
+                        trigger: sec,
+                        start: "top center",
+                        end: "bottom center",
+                        scrub: 1
+                    }
+                });
+
+                // Fade in glass panels
+                ScrollTrigger.create({
+                    trigger: sec,
+                    start: "top 70%",
+                    onEnter: () => sec.querySelector('.glass-panel').classList.add('visible'),
+                    onLeaveBack: () => sec.querySelector('.glass-panel').classList.remove('visible')
+                });
+            });
+        }
+
+        // 8. Render Loop (Zero-Lag Optimized)
+        const clock = new THREE.Clock();
+        function animate() {
+            targetX = mouseX * .001;
+            targetY = mouseY * .001;
+            
+            if(mainModel) {
+                mainModel.rotation.x += 0.05 * (targetY - mainModel.rotation.x);
+                mainModel.rotation.y += 0.05 * (targetX - mainModel.rotation.y);
+            }
+
+            composer.render();
+        }
+        gsap.ticker.add(animate);
+
+        // Window Resize Handler
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            composer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
